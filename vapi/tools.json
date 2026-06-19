@@ -1,0 +1,77 @@
+{
+  "_comment": "Register these as Custom Tools in VAPI (Dashboard > Tools, or via API). Set each tool's server.url to https://<your-host>/vapi/tool-calls. The assistant calls them; your server replies with {\"results\":[{\"toolCallId\",\"result\"}]}.",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "find_service_slots",
+        "description": "Find open service-department appointment times. Use when the caller wants to know what's available but hasn't named an exact time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "service_type": {
+              "type": "string",
+              "enum": ["oil_change", "tire_rotation", "brake_inspection", "diagnostic", "multi_point_inspection", "recall", "other"],
+              "description": "The kind of service requested."
+            },
+            "date": {
+              "type": "string",
+              "description": "Optional preferred day in YYYY-MM-DD. Omit to search the next 7 days."
+            }
+          },
+          "required": ["service_type"]
+        }
+      },
+      "server": { "url": "https://YOUR_HOST/vapi/tool-calls" }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "check_service_availability",
+        "description": "Check whether a specific date and time is open for a given service. Use when the caller names an exact time.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "service_type": { "type": "string", "enum": ["oil_change", "tire_rotation", "brake_inspection", "diagnostic", "multi_point_inspection", "recall", "other"] },
+            "date": { "type": "string", "description": "Day in YYYY-MM-DD." },
+            "time": { "type": "string", "description": "Time in 24h HH:MM, dealer local time." }
+          },
+          "required": ["service_type", "date", "time"]
+        }
+      },
+      "server": { "url": "https://YOUR_HOST/vapi/tool-calls" }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "book_service_appointment",
+        "description": "Book a confirmed service appointment. Only call after the caller has agreed to a specific time and given their name and phone number.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "service_type": { "type": "string", "enum": ["oil_change", "tire_rotation", "brake_inspection", "diagnostic", "multi_point_inspection", "recall", "other"] },
+            "date": { "type": "string", "description": "Day in YYYY-MM-DD." },
+            "time": { "type": "string", "description": "Time in 24h HH:MM, dealer local time." },
+            "customer_name": { "type": "string" },
+            "phone": { "type": "string", "description": "Caller's callback number." },
+            "vehicle_year": { "type": "integer" },
+            "vehicle_make": { "type": "string" },
+            "vehicle_model": { "type": "string" },
+            "notes": { "type": "string", "description": "Anything the caller mentioned about the problem." }
+          },
+          "required": ["service_type", "date", "time", "customer_name", "phone"]
+        }
+      },
+      "server": { "url": "https://YOUR_HOST/vapi/tool-calls" }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "request_human_advisor",
+        "description": "Hand the call to a live service advisor. Call this when the caller asks for a person, sounds distressed, or the request is beyond scheduling.",
+        "parameters": { "type": "object", "properties": {} }
+      },
+      "server": { "url": "https://YOUR_HOST/vapi/tool-calls" }
+    }
+  ]
+}
