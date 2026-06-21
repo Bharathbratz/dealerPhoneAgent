@@ -15,3 +15,8 @@ env/
 .DS_Store
 .idea/
 .vscode/
+
+# Self-hosted TTS: heavy venv, model cache, and personal voice audio
+tts/.venv/
+tts/*.wav
+tts/models/

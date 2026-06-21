@@ -1,0 +1,16 @@
+# Offline voice-clone tooling (XTTS-v2). Requires Python 3.12 (NOT 3.13).
+#
+# Setup:
+#   /opt/homebrew/bin/python3.12 -m venv tts/.venv
+#   tts/.venv/bin/pip install -r tts/requirements.txt
+#
+# Gotchas baked into these pins (each one cost us an install cycle):
+#   - coqui-tts pulls neither torch nor torchcodec; install them explicitly.
+#   - transformers MUST be <5: 5.x removed isin_mps_friendly, which XTTS imports.
+#   - torch >=2.9 needs torchcodec for audio IO -> the coqui-tts[codec] extra.
+
+coqui-tts[codec]==0.27.5
+transformers==4.57.6
+torch==2.12.1
+torchaudio==2.11.0
+torchcodec==0.14.0
