@@ -63,7 +63,12 @@ def main() -> None:
     api_key = require("VAPI_API_KEY")
     public_url = require("PUBLIC_URL").rstrip("/")
     secret = require("VAPI_SERVER_SECRET")
-    voice_id = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM").strip()
+    # Voice: defaults to ElevenLabs, but VOICE_PROVIDER/VOICE_ID can override
+    # (e.g. VOICE_PROVIDER=vapi to use a built-in voice with no extra credential).
+    voice_provider = os.environ.get("VOICE_PROVIDER", "11labs").strip()
+    voice_id = os.environ.get(
+        "VOICE_ID", os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
+    ).strip()
     llm_provider = os.environ.get("LLM_PROVIDER", "openai").strip()
     llm_model = os.environ.get("LLM_MODEL", "gpt-4o-mini").strip()
 
@@ -106,13 +111,13 @@ def main() -> None:
             "messages": [{"role": "system", "content": system_prompt}],
             "toolIds": tool_ids,
         },
-        "voice": {"provider": "11labs", "voiceId": voice_id},
+        "voice": {"provider": voice_provider, "voiceId": voice_id},
     }
     assistant = post("/assistant", assistant_payload)
 
     print("\nDone.")
     print(f"  Assistant id: {assistant['id']}")
-    print(f"  Voice: ElevenLabs ({voice_id})   Model: {llm_provider}/{llm_model}")
+    print(f"  Voice: {voice_provider} ({voice_id})   Model: {llm_provider}/{llm_model}")
     print("\nNext: VAPI Dashboard -> Phone Numbers -> buy/import a number ->")
     print("      set its assistant to the id above -> call it.")
 
