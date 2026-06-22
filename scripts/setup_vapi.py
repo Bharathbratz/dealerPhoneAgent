@@ -103,8 +103,8 @@ def main() -> None:
 
     # 2. Create the assistant wired to those tools, ElevenLabs voice, our prompt.
     assistant_payload = {
-        "name": "Northgate Motors Service",
-        "firstMessage": "Thanks for calling Northgate Motors service. How can I help you today?",
+        "name": "Bharath Kumar Motors Limited - Service",
+        "firstMessage": "Thanks for calling Bharath Kumar Motors Limited. This is Elliot. How can I help you today?",
         "model": {
             "provider": llm_provider,
             "model": llm_model,

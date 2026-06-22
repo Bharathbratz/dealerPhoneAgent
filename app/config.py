@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo
 
 class DealerConfig:
     dealer_id: str = "dealer_001"
-    name: str = "Northgate Motors Service"
+    name: str = "Bharath Kumar Motors Limited"
     timezone: ZoneInfo = ZoneInfo("America/Chicago")
 
     # Service department hours (24h clock, local time).
