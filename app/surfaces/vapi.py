@@ -151,7 +151,8 @@ class VapiSurface:
         return (
             f"You're booked: {label} on {_fmt_slot(appt.slot)} with "
             f"{appt.slot.advisor_name}. Your confirmation code is "
-            f"{' '.join(appt.confirmation_code)}. We'll text a reminder."
+            f"{' '.join(appt.confirmation_code)}. I've texted a calendar invite "
+            "to your phone — just tap it to add it to your calendar."
         )
 
 
