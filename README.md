@@ -18,7 +18,7 @@ app/surfaces/vapi.py        <- the ONLY file that knows VAPI exists
 app/actions/scheduling.py   <- surface-agnostic action layer ("the moat")
         |  DMSAdapter interface
         v
-app/dms/mock.py             <- one adapter per DMS vendor (swap via config)
+app/dms/{mock,tekion}.py    <- one adapter per DMS vendor (swap via config)
 ```
 
 The discipline that makes this a platform and not three rebuilds: the surface
@@ -39,8 +39,8 @@ this reason.
   guard, idempotency (same caller + service + time never double-books), an
   immutable audit trail, and conservative human-escalation (recalls,
   diagnostics, "get me a person", distress signals).
-- A mock DMS so the whole thing runs end-to-end with zero credentials, behind
-  the `DMSAdapter` interface that marks the exact integration seam.
+- A mock DMS so the whole thing runs end-to-end with zero credentials, and a
+  Tekion adapter stub marking the exact integration seam.
 
 ## Run it
 
@@ -68,10 +68,9 @@ curl -s localhost:8000/_audit  # everything the agent did this session
 
 ## Going to a real DMS (Phase 1 -> revenue)
 
-Add one file under `app/dms/` implementing the four `DMSAdapter` methods against
-the design partner's Service Appointments API, register it in `_build_dms`, and
-set `DMS_PROVIDER` to its name. CDK, Reynolds & Reynolds are all the same
-pattern -- one file each. No scheduling logic changes.
+Implement the four methods in `app/dms/tekion.py` against the design partner's
+Tekion Service Appointments API, then set `DMS_PROVIDER=tekion`. CDK and Reynolds
+& Reynolds are the same pattern -- one file each. No scheduling logic changes.
 
 ## Webhook auth
 

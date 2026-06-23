@@ -1,8 +1,8 @@
 """The DMS adapter interface.
 
-Every DMS vendor (e.g. CDK, Reynolds & Reynolds) gets one implementation of this
-interface. The action layer depends only on this abstract class, so adding a
-vendor never touches scheduling logic — you write one new adapter and flip a
+Every DMS vendor (Tekion, CDK, Reynolds & Reynolds) gets one implementation of
+this interface. The action layer depends only on this abstract class, so adding
+a vendor never touches scheduling logic — you write one new adapter and flip a
 config flag. This is the seam that lets the same agent serve dealers on
 different back-office systems.
 """

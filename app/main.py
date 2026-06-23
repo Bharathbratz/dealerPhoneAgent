@@ -25,6 +25,12 @@ from app.surfaces.vapi import VapiSurface, parse_tool_calls
 def _build_dms() -> DMSAdapter:
     if DMS_PROVIDER == "mock":
         return MockDMS()
+    if DMS_PROVIDER == "tekion":
+        from app.dms.tekion import TekionDMS  # imported lazily; needs creds
+
+        raise RuntimeError(
+            "DMS_PROVIDER=tekion but the Tekion adapter is not wired yet."
+        )
     raise RuntimeError(f"Unknown DMS_PROVIDER: {DMS_PROVIDER}")
 
 
