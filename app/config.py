@@ -30,8 +30,8 @@ class DealerConfig:
     )
 
 
-# Which DMS adapter backs the action layer. "mock" runs fully offline; "tekion"
-# is the real integration seam (stubbed until credentials exist).
+# Which DMS adapter backs the action layer. "mock" runs fully offline. Add a real
+# adapter (one file implementing DMSAdapter) and select it here when integrating.
 DMS_PROVIDER = os.getenv("DMS_PROVIDER", "mock")
 
 # Shared secret VAPI signs requests with; verify in production.
