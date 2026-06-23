@@ -39,6 +39,10 @@ def _build_dms() -> DMSAdapter:
 def _build_notifier() -> Notifier:
     if NOTIFY_PROVIDER == "mock":
         return MockNotifier()
+    if NOTIFY_PROVIDER == "twilio":
+        from app.notify.twilio_sms import TwilioNotifier  # lazy; needs creds
+
+        return TwilioNotifier()
     raise RuntimeError(f"Unknown NOTIFY_PROVIDER: {NOTIFY_PROVIDER}")
 
 
