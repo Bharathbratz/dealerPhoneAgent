@@ -29,6 +29,11 @@ class DealerConfig:
         ("adv_2", "Devon"),
     )
 
+    # Shown on the calendar invite. TODO: set the real street address and a
+    # sending mailbox before going live.
+    address: str = "Bharath Kumar Motors Limited, Service Centre"
+    organizer_email: str = "service@bharathkumarmotors.example"
+
 
 # Which DMS adapter backs the action layer. "mock" runs fully offline; "tekion"
 # is the real integration seam (stubbed until credentials exist).
@@ -36,5 +41,13 @@ DMS_PROVIDER = os.getenv("DMS_PROVIDER", "mock")
 
 # Shared secret VAPI signs requests with; verify in production.
 VAPI_SERVER_SECRET = os.getenv("VAPI_SERVER_SECRET", "")
+
+# Public base URL of this server (the tunnel). Used to build the calendar-invite
+# link we send the caller, so it must be reachable from their phone.
+PUBLIC_BASE_URL = os.getenv("PUBLIC_URL", "http://localhost:8000").rstrip("/")
+
+# How appointment invites reach the caller. "mock" records sends without a
+# provider (runs + tests with zero credentials); real channels are added later.
+NOTIFY_PROVIDER = os.getenv("NOTIFY_PROVIDER", "mock")
 
 dealer = DealerConfig()

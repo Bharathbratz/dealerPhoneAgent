@@ -23,6 +23,7 @@ from app.models import (
     Source,
     Vehicle,
 )
+from app.notify.base import MockNotifier, Notifier
 from app.safety import ValidationError, assert_within_hours
 from app.store import AuditLog, IdempotencyStore
 
@@ -33,11 +34,17 @@ class SchedulingService:
         dms: DMSAdapter,
         idempotency: IdempotencyStore,
         audit: AuditLog,
+        notifier: Notifier | None = None,
     ) -> None:
         self.dms = dms
         self.idempotency = idempotency
         self.audit = audit
+        self.notifier = notifier or MockNotifier()
         self._by_id: dict[str, Appointment] = {}
+
+    def get_appointment(self, appointment_id: str) -> Appointment | None:
+        """Look up a confirmed appointment (used to serve its .ics invite)."""
+        return self._by_id.get(appointment_id)
 
     # ---- read paths -------------------------------------------------------
 
@@ -115,6 +122,20 @@ class SchedulingService:
             confirmation_code=appt.confirmation_code,
             source=source.value,
         )
+
+        # Send the calendar invite. A delivery failure must never undo a booking
+        # that already succeeded, so swallow and audit it.
+        try:
+            delivery = self.notifier.send_invite(appt)
+            self.audit.record(
+                "invite_sent",
+                appointment_id=appt.id,
+                channel=delivery.get("channel"),
+                to=delivery.get("to"),
+            )
+        except Exception as e:  # noqa: BLE001 - notification is best-effort
+            self.audit.record("invite_failed", appointment_id=appt.id, detail=str(e))
+
         return appt
 
     @staticmethod

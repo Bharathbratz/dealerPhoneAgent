@@ -64,14 +64,16 @@ class VapiSurface:
     def __init__(self, service: SchedulingService) -> None:
         self.service = service
 
-    def handle(self, tool_name: str, args: dict) -> str:
+    def handle(
+        self, tool_name: str, args: dict, caller_number: str | None = None
+    ) -> str:
         try:
             if tool_name == "find_service_slots":
                 return self._find_slots(args)
             if tool_name == "check_service_availability":
                 return self._check(args)
             if tool_name == "book_service_appointment":
-                return self._book(args)
+                return self._book(args, caller_number)
             if tool_name == "request_human_advisor":
                 return "Transferring you to a service advisor now."
             return f"I don't have a way to handle '{tool_name}' yet."
@@ -116,14 +118,15 @@ class VapiSurface:
             )
         return "That time isn't available and I don't see nearby openings that day."
 
-    def _book(self, args: dict) -> str:
+    def _book(self, args: dict, caller_number: str | None = None) -> str:
         service = _service(args)
 
         reason = escalation_reason(service, args.get("notes", ""))
         if reason:
             return f"For this I'll connect you to a service advisor — {reason}."
 
-        phone = normalize_phone(args.get("phone", ""))
+        # Prefer the actual caller ID; fall back to a number the caller dictated.
+        phone = normalize_phone(caller_number or args.get("phone", ""))
         customer = Customer(name=args.get("customer_name", "Caller"), phone=phone)
         vehicle = Vehicle(
             year=args.get("vehicle_year"),

@@ -12,12 +12,14 @@ from __future__ import annotations
 
 import hmac
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 
 from app.actions.scheduling import SchedulingService
-from app.config import DMS_PROVIDER, VAPI_SERVER_SECRET
+from app.config import DMS_PROVIDER, NOTIFY_PROVIDER, VAPI_SERVER_SECRET
 from app.dms.base import DMSAdapter
 from app.dms.mock import MockDMS
+from app.notify.base import MockNotifier, Notifier
+from app.notify.ics import build_ics
 from app.store import AuditLog, IdempotencyStore
 from app.surfaces.vapi import VapiSurface, parse_tool_calls
 
@@ -34,10 +36,23 @@ def _build_dms() -> DMSAdapter:
     raise RuntimeError(f"Unknown DMS_PROVIDER: {DMS_PROVIDER}")
 
 
+def _build_notifier() -> Notifier:
+    if NOTIFY_PROVIDER == "mock":
+        return MockNotifier()
+    raise RuntimeError(f"Unknown NOTIFY_PROVIDER: {NOTIFY_PROVIDER}")
+
+
 audit = AuditLog()
 idempotency = IdempotencyStore()
-service = SchedulingService(_build_dms(), idempotency, audit)
+service = SchedulingService(_build_dms(), idempotency, audit, _build_notifier())
 surface = VapiSurface(service)
+
+
+def _caller_number(message: dict) -> str | None:
+    """The inbound caller's number from VAPI's payload (caller ID). Lets us skip
+    asking the caller to dictate it and address the invite to their phone."""
+    customer = (message.get("call") or {}).get("customer") or {}
+    return customer.get("number")
 
 app = FastAPI(title="Dealer Service-Scheduling Agent", version="0.1.0")
 
@@ -76,9 +91,10 @@ async def vapi_tool_calls(request: Request) -> dict:
 
     # Tool invocations: do the work, return matching results.
     if msg_type in ("tool-calls", "function-call", "tool_calls"):
+        caller_number = _caller_number(message)
         results = []
         for tool_call_id, name, args in parse_tool_calls(message):
-            result_text = surface.handle(name, args)
+            result_text = surface.handle(name, args, caller_number=caller_number)
             results.append({"toolCallId": tool_call_id, "result": result_text})
         return {"results": results}
 
@@ -90,6 +106,22 @@ async def vapi_tool_calls(request: Request) -> dict:
             duration=message.get("durationSeconds"),
         )
     return {"received": True}
+
+
+@app.get("/appointments/{appointment_id}.ics")
+def appointment_ics(appointment_id: str) -> Response:
+    """Serve the calendar invite. This is the link we text/email the caller;
+    opening it on their phone adds the appointment to Google or Apple Calendar."""
+    appt = service.get_appointment(appointment_id)
+    if appt is None:
+        raise HTTPException(status_code=404, detail="appointment not found")
+    return Response(
+        content=build_ics(appt),
+        media_type="text/calendar",
+        headers={
+            "Content-Disposition": f'attachment; filename="{appointment_id}.ics"'
+        },
+    )
 
 
 @app.get("/_audit")
